@@ -1,7 +1,6 @@
+# 🎬 Content Machine – Automated AI‑Powered Short Videos
 
-# 🎬 Cont Endless – Automated AI‑Powered Short Videos
-
-**Cont Endless** is a fully automated n8n workflow that takes trending content ideas through a creative pipeline—idea scraping, prompt generation, video rendering via Creatomate, approval, and publishing—optimized for TikTok & Instagram.
+**Content Machine** is a fully automated n8n workflow that takes trending content ideas through a creative pipeline—idea scraping, prompt generation, video rendering via Creatomate, approval, and publishing—optimized for TikTok & Instagram.
 
 ---
 
