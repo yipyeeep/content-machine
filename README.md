@@ -6,106 +6,116 @@
 
 ## 🚀 Features
 
-- **Trend Discovery**  
-  Scrapes TikTok/Instagram for trending ideas using Playwright or APIs.
+- **Scrape Trending Ideas**
+  Agent scrapes TikTok/Instagram for trending topics, hashtags, view counts.
+  Uses n8n Code node + Playwright for custom scraping to bypass restrictions.
 
-- **Content Prompt Generation**  
-  Uses OpenAI’s GPT through n8n’s AI Agent to create video prompts.
+- **Generate Creative Prompt**
+  Reads scraped trends and uses LLM to suggest unique video ideas.
+  Uses n8n AI Agent node and leverages GPT for creativity.
+
+- **Validation & Enrichment**
+  Verifies ideas using external knowledge API.
+  Uses Perplexity via OpenRouter in HTTP Request and reduces hallucination by checking real facts.
 
 - **Video Creation**  
-  Sends prompts to Creatomate’s API for vertical video generation using a pre‑made template :contentReference[oaicite:1]{index=1}.
+  Sends prompts to Creatomate’s API for vertical video generation using a pre‑made template.
 
-- **Approval Workflow**  
-  Suspends the workflow until user approval via webhook/UI step.
+- **Approval Flow**
+  Uploads placeholder video, workflow pauses for your review.
+  Uses n8n webhook + user-trigger node to ensure human-in-the-loop quality check.
 
 - **Multi‑Platform Publishing**  
   Automatically posts approved videos to TikTok & Instagram through upload‑post.com or native APIs.
 
 - **Analytics Loop**  
   Fetches engagement data and feeds it back into the trend‑picking agent for continuous optimization.
+  Enables data-driven optimization via n8n HTTP Request or Code nodes + Postgres.
 
 ---
 
 ## 📦 Tech Stack
 
-| Component               | Tech / Service                      |
+| Component              | Tech / Service                      |
 |------------------------|-------------------------------------|
-| Workflow Orchestration | **n8n** (self-hosted or Cloud)      |
-| Scraping / Trend Data  | Playwright, Apify                   |
+| Workflow Orchestration | n8n (self-hosted)                   |
+| Scraping / Trend Data  | Playwright                          |
 | Creative Generation    | OpenAI GPT via AI‑Agent node        |
-| Video Rendering        | Creatomate API :contentReference[oaicite:2]{index=2} |
+| Validation / Enrichment| Perplexity via OpenRouter           |
+| Video Rendering        | Creatomate API                      |
 | User Approval          | n8n Webhook + Conditional Logic     |
-| Social Posting         | upload‑post.com / TikTok & IG APIs |
-| Analytics Storage      | Postgres / Airtable / MongoDB       |
+| Social Posting         | upload‑post.com / TikTok & IG APIs  |
+| Analytics Storage      | Postgres                            |
 
 ---
 
 ## 🛠️ Getting Started
 
 ### 1. Create a Creatomate Template  
-- Log into Creatomate, choose or set up a **9:16 vertical video template** (e.g., Quick Promo).  
-- Mark dynamic fields (e.g., Text-1, Text-2, Video) to be replaced via API :contentReference[oaicite:3]{index=3}.
+- Log into Creatomate, choose or set up a **9:16 vertical video template** (e.g., Quick Promo).
+- Mark dynamic fields (e.g., Text-1, Text-2, Video) to be replaced via API.
 
 ### 2. Configure n8n
 
 1. **Manual Trigger for Testing**  
    Use a manual trigger and a Set node to define example prompt fields.
 
-2. **HTTP Request Node for Video Submission**  
-   - Import Creatomate’s cURL into n8n.  
-   - Map your Set-Node JSON to template fields (video URL, text) :contentReference[oaicite:4]{index=4}.
+2. **Configure validation agent**
+   - Enable Perplexity credentials in n8n and add HTTP Request node to verify idea prompts.
 
-3. **Wait & Polling**  
+3. **HTTP Request Node for Video Submission**  
+   - Import Creatomate’s cURL into n8n.  
+   - Map your Set-Node JSON to template fields (video URL, text).
+
+4. **Wait & Polling**  
    - Use a Wait node (e.g., 60–120 s), then poll Creatomate’s `GET /renders/{id}` endpoint.  
    - Route based on status: `succeeded`, `failed`, or still processing.
 
-4. **Success & Failure Handling**  
+5. **Success & Failure Handling**  
    - On success: return video URL.  
    - On failure: notify via Slack, email, or UI.
 
-5. **Approval Step**  
+6. **Approval Step**  
    - Send video preview via webhook or rich notification.  
    - Use conditional routing: Wait for user approval before proceeding.
 
-6. **Publishing**  
+7. **Publishing**  
    - Use HTTP Request or upload‑post.com nodes to publish to TikTok & Instagram.
 
-7. **Analytics Collection**  
+8. **Analytics Collection**  
    - Periodically fetch post metrics via platform APIs.  
    - Store results, and feed back into trend and prompt agents.
 
 ---
 
-## 🧪 Quick Workflow Example
+## 🧩 Pipeline Flow (n8n Visualization)
 
 ```text
-[Trigger → Set Prompt] 
-↓
-[Send to Creatomate → Wait → Poll Status]
-↓
-└─ If succeeded → [Webhook: await approval]
-     ├────▶ If approved → [Publish → Fetch Analytics → Store → Re-optimize]
-     └────▶ If declined → [Log / Stop / Edit Prompt]
-````
-
----
-
-## 📚 Useful References
-
-* **n8n + Creatomate integration tutorial** ([Creatomate][1], [n8n][2], [n8n][3])
-* Creatomate + elevenLabs automated voiceover workflows ([Creatomate][4])
-* n8n multi-platform video pipeline sample template ([n8n][3])
+[Trigger] 
+ ↓
+[Agent 1: Scrape Trends] → Postgres
+ ↓
+[Agent 2: LLM Prompt Generation] → Postgres
+ ↓
+[Agent 3: Perplexity Validation] → Curated Prompts
+ ↓
+[Agent 4: Creatomate Video Generation] → Wait + Poll
+ ↓
+[Approval? Webhook] —✅→ [Agent 5: Publish Video] → [Agent 6: Fetch Analytics] → Postgres → feedback to Agents 1/2
+                 —❌→ [Abort or Loop Back to Agent 2]
+```
 
 ---
 
 ## ✅ Next Steps
 
-1. Set up Creatomate template and note its template ID.
-2. Create the HTTP Request node in n8n; test sample render.
-3. Add Wait + Poll nodes with status-based routing.
-4. Build user approval workflow.
-5. Integrate publishing nodes for TikTok & Instagram.
-6. Design analytics agent to capture and loop back insights.
+1. Set up Perplexity API call for idea fact-checking.
+2. Set up Creatomate template and note its template ID.
+3. Create the HTTP Request node in n8n; test sample render.
+4. Add Wait + Poll nodes with status-based routing.
+5. Build and test user approval workflow.
+6. Integrate publishing nodes for TikTok & Instagram.
+7. Design analytics agent to capture and loop back insights.
 
 ---
 
@@ -126,5 +136,4 @@ MIT License – see [LICENSE.md](LICENSE.md)
 
 ---
 
-Created with ❤️ by \yipyeeep.
-Ready to transform your machine-driven creativity into viral content? Let’s go viral!
+Created by yipyeeep.
