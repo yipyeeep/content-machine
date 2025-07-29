@@ -1,0 +1,38 @@
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8npassword
+      # Add other env vars as needed
+    depends_on:
+      - postgres
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8npassword
+      - POSTGRES_DB=n8n
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  scraper:
+    build:
+      context: ./scraper
+      dockerfile: ../Dockerfile.scraper
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./scraper:/app
